@@ -38,7 +38,7 @@ class ExportTests(unittest.TestCase):
 
     def test_dashboard_and_readiness(self):
         with self.get('/') as response:
-            self.assertIn('双语打包下载', response.read().decode())
+            self.assertIn('视频与字幕打包', response.read().decode())
         with self.get('/api/assets') as response:
             assets = json.load(response)
         self.assertEqual(set(assets), set(ASSETS))
@@ -54,28 +54,28 @@ class ExportTests(unittest.TestCase):
                 self.assertEqual(response.headers['Content-Type'], mime)
 
     def test_browser_seeking_and_head(self):
-        with self.get('/media/th-video', headers={'Range': 'bytes=7-19'}) as response:
+        with self.get('/media/en-video', headers={'Range': 'bytes=7-19'}) as response:
             self.assertEqual(response.status, 206)
-            self.assertEqual(response.read(), self.payloads['th-video'][7:20])
-            self.assertEqual(response.headers['Content-Range'], f'bytes 7-19/{len(self.payloads["th-video"])}')
+            self.assertEqual(response.read(), self.payloads['en-video'][7:20])
+            self.assertEqual(response.headers['Content-Range'], f'bytes 7-19/{len(self.payloads["en-video"])}')
         with self.get('/media/en-video', headers={'Range': 'bytes=-12'}) as response:
             self.assertEqual(response.read(), self.payloads['en-video'][-12:])
-        with self.get('/download/th-video', method='HEAD') as response:
-            self.assertEqual(int(response.headers['Content-Length']), len(self.payloads['th-video']))
+        with self.get('/download/en-video', method='HEAD') as response:
+            self.assertEqual(int(response.headers['Content-Length']), len(self.payloads['en-video']))
             self.assertEqual(response.read(), b'')
 
     def test_invalid_ranges_and_unknown_paths(self):
         for value in ('bytes=999999-', 'bytes=20-2', 'bytes=-0', 'bytes=1-2,3-4', 'nonsense'):
             with self.subTest(value=value), self.assertRaises(HTTPError) as error:
-                self.get('/media/th-video', headers={'Range': value})
+                self.get('/media/en-video', headers={'Range': value})
             self.assertEqual(error.exception.code, 416)
         for path in ('/download/server.py', '/media/../../server.py', '/data/th.mp4'):
             with self.subTest(path=path), self.assertRaises(HTTPError) as error:
                 self.get(path)
             self.assertEqual(error.exception.code, 404)
 
-    def test_bilingual_archive_contains_all_files(self):
-        with self.get('/download/bilingual.zip') as response:
+    def test_english_archive_contains_all_files(self):
+        with self.get('/download/english.zip') as response:
             self.assertEqual(response.headers['Content-Type'], 'application/zip')
             self.assertIn('attachment', response.headers['Content-Disposition'])
             archive = zipfile.ZipFile(io.BytesIO(response.read()))
@@ -84,22 +84,22 @@ class ExportTests(unittest.TestCase):
         self.assertIsNone(archive.testzip())
 
     def test_missing_file_disables_export_and_archive(self):
-        path = self.directory / 'th.srt'
+        path = self.directory / 'en.srt'
         path.unlink()
         try:
             with self.assertRaises(HTTPError) as error:
                 self.get('/healthz')
             self.assertEqual(error.exception.code, 503)
             with self.get('/api/assets') as response:
-                self.assertFalse(json.load(response)['th-subtitles']['available'])
+                self.assertFalse(json.load(response)['en-subtitles']['available'])
             with self.assertRaises(HTTPError) as error:
-                self.get('/download/th-subtitles')
+                self.get('/download/en-subtitles')
             self.assertEqual(error.exception.code, 404)
             with self.assertRaises(HTTPError) as error:
-                self.get('/download/bilingual.zip')
+                self.get('/download/english.zip')
             self.assertEqual(error.exception.code, 409)
         finally:
-            path.write_bytes(self.payloads['th-subtitles'])
+            path.write_bytes(self.payloads['en-subtitles'])
 
 
 if __name__ == '__main__':

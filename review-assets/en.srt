@@ -1,15 +1,28 @@
 1
-00:00:00,000 --> 00:00:02,300
-CAR CLUTTER?
+00:00:00,000 --> 00:00:02,600
+OBD power for parking monitoring.
 
 2
-00:00:02,300 --> 00:00:04,800
-A spot for the essentials.
+00:00:02,600 --> 00:00:05,400
+Use a compatible cable for your dash cam.
 
 3
-00:00:04,800 --> 00:00:07,200
-Bottle. Phone. Cup.
+00:00:05,400 --> 00:00:10,400
+Plug it into the OBD-II port beneath the dash.
 
 4
-00:00:07,200 --> 00:00:09,600
-What would you put here?
+00:00:10,400 --> 00:00:12,400
+Take the power lead to your dash cam.
+
+5
+00:00:12,400 --> 00:00:16,400
+Connect the lead to the camera power input.
+
+6
+00:00:16,400 --> 00:00:21,900
+Confirm that the dash cam powers on.
+
+7
+00:00:21,900 --> 00:00:29,700
+With the ignition off, check that recording stays active.
+Parking mode depends on camera and vehicle compatibility.

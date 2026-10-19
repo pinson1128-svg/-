@@ -123,6 +123,22 @@ class VoiceoverTests(unittest.TestCase):
         finally:
             self.server.voice_lock.release()
 
+    def test_provider_error_diagnostics_do_not_expose_free_text(self):
+        for status in ('missing_permissions', 'detected_unusual_activity', 'quota_exceeded', 'unknown-private-status'):
+            body = json.dumps({'detail': {'status': status, 'message': 'sensitive-provider-text-and-key'}}).encode()
+            error = HTTPError('https://api.elevenlabs.io', 400, 'private', {}, io.BytesIO(body))
+            with self.subTest(status=status), patch('elevenlabs_api.urlopen', side_effect=error):
+                with self.assertRaises(HTTPError) as result:
+                    self.get()
+                message = json.load(result.exception)['error']
+                self.assertIn('加载声音失败', message)
+                self.assertIn('HTTP 400', message)
+                self.assertNotIn('sensitive-provider-text-and-key', message)
+                if status in elevenlabs_api.ERROR_REASONS:
+                    self.assertIn(status, message)
+                else:
+                    self.assertNotIn(status, message)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,6 +6,17 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 MODEL = 'eleven_multilingual_v2'
+ERROR_REASONS = {
+    'invalid_api_key': 'API Key 无效，请检查 Render 中的 ELEVENLABS_API_KEY。',
+    'missing_permissions': '密钥缺少权限；加载声音需要 Voices Read，生成需要 Text to Speech。',
+    'quota_exceeded': '账号 API 额度不足，请到 ElevenLabs 查看使用量。',
+    'rate_limit_exceeded': '请求频率受限，请稍后重试。',
+    'too_many_concurrent_requests': '账号同时请求过多，请稍后重试。',
+    'detected_unusual_activity': 'ElevenLabs 限制了此账号或服务器的访问，请在其后台或支持渠道确认。',
+    'voice_not_found': '所选声音不可用，请重新加载声音列表。',
+    'model_not_found': '当前账号无法使用所请求的模型，请检查模型权限。',
+    'ip_not_allowed': '密钥的 IP 限制未允许此服务器，请检查 ElevenLabs 密钥设置。',
+}
 
 
 class VoiceError(Exception):
@@ -30,10 +41,26 @@ def request(path, payload=None):
                 raise VoiceError('语音响应过大，请缩短文案。')
             return content
     except HTTPError as error:
-        messages = {401: 'ElevenLabs 密钥无效，请在 Render 检查。',
+        messages = {400: '请求被拒绝，请检查 ElevenLabs 账号和 API 设置。',
+                    401: 'ElevenLabs 未授权，请检查 API Key 和密钥权限。',
+                    402: '请在 ElevenLabs 查看 API 额度与套餐限制。',
                     403: 'ElevenLabs 拒绝访问，请检查密钥权限和账号套餐。',
-                    429: 'ElevenLabs 额度或请求频率受限，请检查账号后重试。'}
-        raise VoiceError(messages.get(error.code, 'ElevenLabs 请求失败，请检查账号额度或稍后重试。')) from None
+                    404: '请求的接口或声音不存在，请检查接口及声音选择。',
+                    422: 'ElevenLabs 无法处理请求参数，请检查接口配置。',
+                    429: '请求频率或并发受到限制，请稍后重试。'}
+        reason = None
+        try:
+            detail = json.loads(error.read(65536)).get('detail', {})
+            status = detail.get('status') if isinstance(detail, dict) else None
+            if isinstance(status, str) and status in ERROR_REASONS:
+                reason = status
+        except (ValueError, AttributeError, OSError):
+            pass
+        # Do not expose the provider's free-text body: it may echo credentials or user text.
+        message = ERROR_REASONS[reason] if reason else messages.get(error.code, 'ElevenLabs 服务返回错误，请稍后重试。')
+        operation = '加载声音' if payload is None else '生成配音'
+        code = f'HTTP {error.code}' + (f' / {reason}' if reason else '')
+        raise VoiceError(f'{operation}失败（ElevenLabs {code}）：{message}') from None
     except (URLError, TimeoutError, OSError):
         raise VoiceError('暂时无法连接 ElevenLabs，请稍后重试。') from None
 

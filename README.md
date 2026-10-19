@@ -33,3 +33,7 @@ python3 tools/render_unboxing.py SOURCE.mp4 --output OUTPUT_DIRECTORY
 ## Render
 
 网站为 https://bilingual-video-review.onrender.com 。推送 GitHub main 后等待对应提交部署 Live，若未自动更新，在 Render 选择 Manual Deploy → Deploy latest commit。GitHub 推送成功不等同于已完成线上部署。
+
+## ElevenLabs 英语旁白
+
+接入步骤见 [ELEVENLABS_SETUP.md](ELEVENLABS_SETUP.md)。在 Render 环境变量设置 ELEVENLABS_API_KEY 和至少 20 位的 VOICE_ACCESS_TOKEN，重新部署后可在网页选择声音并生成独立配音 MP3。Key 不下发浏览器。网页输入独立口令，不要输入 API Key。生成会使用 ElevenLabs 额度。当前不会自动把 MP3 混入视频或添加配乐。真实账号和额度尚待用户配置后验证；第三方调用使用替身完成自动测试，未消耗真实额度。

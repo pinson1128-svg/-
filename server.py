@@ -3,11 +3,16 @@
 import argparse
 import io
 import json
+import hmac
+import os
+import threading
+import time
 from pathlib import Path
 import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 import zipfile
+import elevenlabs_api
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = {
@@ -21,10 +26,58 @@ class ExportServer(ThreadingHTTPServer):
 
     def __init__(self, address, data_dir):
         self.data_dir = Path(data_dir).resolve()
+        self.voice_lock = threading.Lock()
+        self.last_voice_request = 0.0
         super().__init__(address, Handler)
 
 
 class Handler(BaseHTTPRequestHandler):
+    def voice_auth(self):
+        token = os.environ.get('VOICE_ACCESS_TOKEN', '')
+        if len(token) < 20:
+            self.json_reply({'error': '请先在 Render 设置至少 20 位的 VOICE_ACCESS_TOKEN。'}, 503)
+            return False
+        actual = self.headers.get('Authorization', '')
+        if not hmac.compare_digest(actual.encode(), ('Bearer ' + token).encode()):
+            self.json_reply({'error': '访问口令不正确。'}, 401)
+            return False
+        return True
+
+    def json_reply(self, value, status=200):
+        self.reply(json.dumps(value, ensure_ascii=False).encode(), 'application/json; charset=utf-8', status)
+
+    def do_POST(self):
+        if urlsplit(self.path).path != '/api/voiceover':
+            self.send_error(404)
+            return
+        if not self.voice_auth():
+            return
+        try:
+            size = int(self.headers.get('Content-Length', '0'))
+            if size <= 0 or size > 8192:
+                self.json_reply({'error': '文案请求过大或为空。'}, 413)
+                return
+            data = json.loads(self.rfile.read(size))
+            if not isinstance(data, dict):
+                raise ValueError()
+        except (ValueError, UnicodeDecodeError):
+            self.json_reply({'error': '请求格式无效。'}, 400)
+            return
+        if not self.server.voice_lock.acquire(blocking=False):
+            self.json_reply({'error': '已有配音正在生成，请稍后再试。'}, 429)
+            return
+        try:
+            if time.monotonic() - self.server.last_voice_request < 10:
+                self.json_reply({'error': '请等待 10 秒再生成下一条，避免重复消耗额度。'}, 429)
+                return
+            audio = elevenlabs_api.synthesize(data.get('text'), data.get('voice_id'))
+            self.server.last_voice_request = time.monotonic()
+            self.reply(audio, 'audio/mpeg', filename='English_voiceover.mp3')
+        except elevenlabs_api.VoiceError as error:
+            self.json_reply({'error': str(error)}, error.status)
+        finally:
+            self.server.voice_lock.release()
+
     def do_HEAD(self):
         self.do_GET()
 
@@ -61,6 +114,13 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(json.dumps({key: {'available': self.exists(key),
                 'filename': item[1], 'size': (self.server.data_dir / item[0]).stat().st_size if self.exists(key) else 0}
                 for key, item in ASSETS.items()}).encode(), 'application/json')
+        elif path == '/api/voices':
+            if not self.voice_auth():
+                return
+            try:
+                self.json_reply({'voices': elevenlabs_api.voices()})
+            except elevenlabs_api.VoiceError as error:
+                self.json_reply({'error': str(error)}, error.status)
         elif path in ('/download/english.zip', '/download/bilingual.zip'):
             if not all(self.exists(key) for key in ASSETS):
                 self.reply(b'The English video and subtitle file are required.', 'text/plain', 409)

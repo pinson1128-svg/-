@@ -7,7 +7,7 @@
 - `review-assets/` 已准备两份真实样片和两份 SRT，合计约 9 MB。
 - Render 启动命令：`python server.py --host 0.0.0.0 --port "$PORT" --data-dir review-assets`。
 - 原 `data/` 仍被 Git 忽略；不能依赖它出现在远程构建环境中。因此待部署样片另放于 `review-assets/`。
-- 没有推送 GitHub、创建 Render 服务或发布公开网址；这些步骤尚未执行。
+- 首次部署版本已推送 GitHub main（94407d4），用户已在 Render 手动创建服务并提供成功上线截图。服务网址：https://bilingual-video-review.onrender.com 。后续提交仍需确认 Render 已完成新部署，不能将 GitHub 推送成功当成线上已更新。
 
 ## 连接后执行
 

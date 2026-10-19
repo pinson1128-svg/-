@@ -107,6 +107,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(status)
             self.send_header('Content-Type', mime)
             self.send_header('Accept-Ranges', 'bytes')
+            self.send_header('Cache-Control', 'no-store')
             self.send_header('Content-Length', str(end - start + 1))
             self.send_header('X-Content-Type-Options', 'nosniff')
             if status == 206:

@@ -1,42 +1,35 @@
-# 美区 OBD 安装教程：预览与导出
+# 美区记录仪开箱：预览与导出
 
-当前版本只展示用户新上传素材的美区英语版，约 29.7 秒。内容是 OBD 供电线安装、记录仪开机与停车供电检查。原片已经是 SDR BT.709，本次没有使用调色、曝光、饱和度、锐化、色调映射或额外滤镜。字幕与片段拼接需要视频重编码，所以不声称文件逐字节等同原片。
+当前是最新上传素材的美区英语版，30 秒，静音。只做轻度剪辑和英文动作字幕，保留源视频的色调、滤镜、尺寸及色彩标签。不会使用旧版 OBD 素材或车内收纳视频的调色参数。
 
-原音轨保留并跟随剪辑，切口使用 15 毫秒音频淡入淡出。没有生成英语人声配音。停车模式需相机、供电线与车辆支持；不承诺未经验证的持续录制时长。
+画面动作：展示机身、翻转镜头、检查接口、查看 microSD 卡、打开配件层、查看说明书、展示配件及调整机身角度。动作说明只描述画面，不虚构未验证的产品规格或配件性能。
 
-## 启动和部署
+## 运行与验证
 
 ```sh
 python3 server.py --port 8080 --data-dir review-assets
-```
-
-Python 标准库即可运行。Render 保持现有启动命令和域名，无需新建服务。源码推送后，必须等待 Render 完成对应提交的新部署，才会更新线上视频。
-
-`review-assets/en.mp4` 和 `review-assets/en.srt` 是当前导出文件。先前泰语文件保留作历史素材，不展示、不作为就绪依赖，也不进入本次英语导出包。
-
-## 导出接口
-
-- `/media/en-video`：浏览器预览，支持字节范围请求。
-- `/download/en-video`：英语 MP4。
-- `/download/en-subtitles`：英语 SRT。
-- `/download/english.zip`：视频、字幕与说明文件。
-- `/api/assets`：当前英语文件状态。
-- `/healthz`：两份英语文件就绪后返回 200，否则 503。
-
-旧 `/download/bilingual.zip` 路径保留兼容，返回同一英语包；不会混入旧素材。
-
-## 重现编辑
-
-```sh
-python3 tools/render_obd.py /path/to/053e5b8c16c7d3eb6d11f97158716e15.mp4 --output /path/to/output
-```
-
-剪辑计划在脚本的 CUTS 列表，输出 en.mp4、en.srt、edit-plan.json。原始素材保留在云环境，未新增发布到 GitHub。更新导出前先检查视频和字幕，再替换 review-assets 下同名文件。
-
-## 验证
-
-```sh
 python3 -m unittest discover -s tests -v
 ```
 
-实际成片还验证了完整解码、时长、尺寸、SDR 色彩标记，并比较字幕区域以外的对应原始帧，确认颜色只有重编码带来的轻微像素差异。
+Python 标准库即可运行。Render 继续使用现有服务，监听平台注入的 PORT。`/healthz` 检查 en.mp4 和 en.srt；`/api/assets` 返回当前两份文件状态。
+
+- `/media/en-video`：视频预览，支持范围请求。
+- `/download/en-video`：英语版 MP4。
+- `/download/en-subtitles`：英文动作 SRT。
+- `/download/english.zip`：英语视频、字幕和说明。
+
+当前成片没有任何音频轨道，原声已完全移除；不添加配音或背景音乐。旧泰语文件保留，但不在页面展示，不纳入导出包。
+
+## 重现
+
+```sh
+python3 tools/render_unboxing.py SOURCE.mp4 --output OUTPUT_DIRECTORY
+```
+
+此渲染器针对本次 720×1280、30fps、BT.709 色原色/矩阵、sRGB 传递函数的 SDR 素材。剪辑计划见 CUTS。没有曝光、调色、锐化、色调映射、缩放或变速处理。字幕与拼接需重编码，会有少量压缩差异。
+
+输入文件 2727b8323f7fb3b175314513f0ef8ea2.mp4 保留在云工作区，未将原片上传至 GitHub。导出后验证完整解码、30 秒时长、无音轨、源色彩标签与对应原始帧，再更新 review-assets/en.mp4 和 en.srt。旧 tools/render_obd.py 仅用于上一条 OBD 教程，不用于本条素材。
+
+## Render
+
+网站为 https://bilingual-video-review.onrender.com 。推送 GitHub main 后等待对应提交部署 Live，若未自动更新，在 Render 选择 Manual Deploy → Deploy latest commit。GitHub 推送成功不等同于已完成线上部署。

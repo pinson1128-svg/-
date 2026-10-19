@@ -1,28 +1,35 @@
 1
-00:00:00,000 --> 00:00:02,600
-OBD power for parking monitoring.
+00:00:00,000 --> 00:00:03,000
+Take a closer look at the dash cam.
 
 2
-00:00:02,600 --> 00:00:05,400
-Use a compatible cable for your dash cam.
+00:00:03,000 --> 00:00:07,000
+Turn it over to view the camera lenses.
 
 3
-00:00:05,400 --> 00:00:10,400
-Plug it into the OBD-II port beneath the dash.
+00:00:07,000 --> 00:00:10,000
+Check the ports along the edge.
 
 4
-00:00:10,400 --> 00:00:12,400
-Take the power lead to your dash cam.
+00:00:10,000 --> 00:00:13,000
+Take a look at the microSD card.
 
 5
-00:00:12,400 --> 00:00:16,400
-Connect the lead to the camera power input.
+00:00:13,000 --> 00:00:16,000
+Open the accessory compartment.
 
 6
-00:00:16,400 --> 00:00:21,900
-Confirm that the dash cam powers on.
+00:00:16,000 --> 00:00:18,000
+Check the included instructions.
 
 7
-00:00:21,900 --> 00:00:29,700
-With the ignition off, check that recording stays active.
-Parking mode depends on camera and vehicle compatibility.
+00:00:18,000 --> 00:00:22,000
+Unpack the camera and cable bundle.
+
+8
+00:00:22,000 --> 00:00:26,000
+Lay out the accessories.
+
+9
+00:00:26,000 --> 00:00:30,000
+Adjust the camera angle.

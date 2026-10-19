@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""US English OBD installation video review and export."""
+"""US English silent dash cam unboxing review and export."""
 import argparse
 import io
 import json
@@ -11,8 +11,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent
 ASSETS = {
-    'en-video': ('en.mp4', 'English_OBD_install.mp4', 'video/mp4'),
-    'en-subtitles': ('en.srt', 'English_OBD_install.srt', 'application/x-subrip'),
+    'en-video': ('en.mp4', 'English_Dashcam_Unboxing.mp4', 'video/mp4'),
+    'en-subtitles': ('en.srt', 'English_Dashcam_Unboxing.srt', 'application/x-subrip'),
 }
 
 
@@ -69,8 +69,8 @@ class Handler(BaseHTTPRequestHandler):
             with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_STORED) as output:
                 for key, (source, name, _) in ASSETS.items():
                     output.write(self.server.data_dir / source, name)
-                output.writestr('README.txt', 'US English OBD installation guide.\nOriginal source color and original audio retained. English captions added. No synthesized voiceover.\n')
-            self.reply(archive.getvalue(), 'application/zip', filename='English_OBD_exports.zip')
+                output.writestr('README.txt', 'US English dash cam unboxing.\nOriginal source color retained. Original audio removed; silent video. English action captions added.\n')
+            self.reply(archive.getvalue(), 'application/zip', filename='English_Unboxing_exports.zip')
         elif path.startswith(('/media/', '/download/')):
             asset = path.rsplit('/', 1)[-1]
             if asset not in ASSETS or not self.exists(asset):
